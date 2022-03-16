@@ -1,4 +1,2 @@
-add_executable(server main.cpp)
-target_link_libraries(server PUBLIC btlib fmt::fmt)
-
-file(COPY device.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+add_executable(server server.cpp)
+target_link_libraries(server PUBLIC bluetooth fmt::fmt)
