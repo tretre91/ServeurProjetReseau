@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     /* set the outgoing connection parameters, server's address and port number */
     sockaddr_rc addr = {0};
     addr.rc_family = AF_BLUETOOTH;           /* Addressing family, always AF_BLUETOOTH */
-    addr.rc_channel = 8;                     /* server's port number */
+    addr.rc_channel = 1;                     /* server's port number */
     str2ba(server_address, &addr.rc_bdaddr); /* server's Bluetooth Address */
 
     /* connect to server with destination address and port */

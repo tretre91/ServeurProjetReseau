@@ -20,5 +20,19 @@ CPMAddPackage(
   OPTIONS "FMT_DOC OFF" "FMT_TEST OFF"
 )
 
+CPMAddPackage(
+  NAME asio
+  GITHUB_REPOSITORY "chriskohlhoff/asio"
+  GIT_TAG "asio-1-22-1"
+  DOWNLOAD_ONLY YES
+)
+
+if (asio_ADDED)
+  add_library(asio INTERFACE)
+  target_include_directories(asio INTERFACE "${asio_SOURCE_DIR}/asio/include")
+else()
+  message(FATAL_ERROR "ERROR: failed to add asio")
+endif()
+
 add_subdirectory(server)
 add_subdirectory(client)
