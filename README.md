@@ -7,7 +7,7 @@ voir https://hackmd.io/@pOKjsj05QGK4BisC1CfjbQ/ByJgKU0Z9
 ## Build
 
 Pour compiler les différents exécutables vous aurez besoin de cmake, pour l'installer vous pouvez simplement faire `sudo apt install cmake`.
-On a aussi besoin de libbluetooth-dev (`sudo apt install libbluetooth-dev`).
+On a aussi besoin de libbluetooth-dev (`sudo apt install libbluetooth-dev`), et d'une connexion à internet (seulement lors de la première configuration du projet).
 
 ```bash
 $ git clone https://gitlab.dsi.universite-paris-saclay.fr/trevis.morvany/projetreseau
@@ -29,5 +29,11 @@ Pour l'exécuter (depuis le dossier build) : `./client/client <adresse>` avec `a
 
 Le serveur gère plusieurs connections à la fois, il affiche dans la console les messages reçus et les renvoie à tous les clients connectés.
 
-Pour que le pi puisse accepter des connexions il doit être visible en bluetooth (`bluetoothctl discoverable on`).
+**Remarque :** pour que le pi puisse accepter des connexions il doit être visible en bluetooth (`bluetoothctl discoverable on`).
+
+Les libs utilisées sont :
+- [fmtlib](https://fmt.dev) : pour l'affichage, en remplacement de printf et cout (pas *absolument* nécessaire, je l'ai incluse par habitude mais on peut la virer si vous voulez)
+- [dasynq](https://github.com/davmac314/dasynq) : pour la boucle d'évenement, ça permet d'avoir des fonctions appelés de manière asynchrone lorsqu'on recoit un message sur un socket, ce qui permet de gérer plusieurs connexions à la fois ainsi qu'accepter de nouveaux utilisateurs sur un seul thread
+
+La partie socket est basée sur le code de Colin.
  
