@@ -1,115 +1,84 @@
-/*
- * inspiré de https://github.com/atwilc3000/sample/blob/master/Bluetooth/rfcomm_server.c
- */
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
 #include <cstdio>
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include <array>
+#include "server.hpp"
 #include <fmt/core.h>
-#include <optional>
 #include <string>
 
-class Client
-{
-public:
-    Client(std::string_view name, int socket) : name(name), socket(socket) {}
-    Client(std::string&& name, int socket) : name(name), socket(socket) {}
+using rearm = dasynq::rearm;
 
-    ~Client() {
-        if (socket != -1) {
-            close(socket);
-        }
-    }
+ChatRoom::ChatRoom(int socket, loop_type& event_loop) : server_socket(socket), event_loop(event_loop) {
+    auto acceptor = loop_type::fd_watcher::add_watch(event_loop, server_socket, dasynq::IN_EVENTS, [&](loop_type& loop, int sock, int flags) {
+        fmt::print("Nouvelle tentative de connexion ... ");
 
-    std::optional<std::string> read() {
-        auto bytes_read = recv(socket, buffer.data(), buffer.size(), 0);
-        if (bytes_read == -1) {
-            return std::nullopt;
+        sockaddr_rc client_address = {0};
+        unsigned int addr_len;
+
+        int client_socket = accept(sock, (sockaddr*)&client_address, &addr_len);
+
+        if (client_socket == -1) {
+            fmt::print("Echec de la connexion\n");
         } else {
-            return std::string(buffer.data(), bytes_read);
+            std::string buffer(18, '\0');
+            ba2str(&client_address.rc_bdaddr, buffer.data());
+            fmt::print("Succes (adresse : {})\n", buffer);
+
+            ClientWatcher* client = new ClientWatcher(client_socket, *this);
+            connected_clients++;
+            client->add_watch(loop, client_socket, flags);
+            clients.push_front(client);
+        }
+
+        return rearm::REARM;
+    });
+}
+
+void ChatRoom::send(std::string_view message) {
+    for (auto it = clients.begin(); it != clients.end();) {
+        if ((*it)->write(message) == -1) {
+            auto current = it++;
+            (*current)->deregister(event_loop);
+        } else {
+            ++it;
         }
     }
-
-    ssize_t write(std::string_view data) {
-        ssize_t bytes_written = send(socket, data.data(), data.size(), 0);
-        return bytes_written;
-    }
-
-    const std::string& getName() const {
-        return name;
-    }
-
-private:
-    std::array<char, 1024> buffer;
-    std::string name;
-    int socket = -1;
-};
-
-Client accept_client(int server_socket) {
-    sockaddr_rc client_address = {0};
-    unsigned int addr_len;
-
-    int socket = accept(server_socket, (sockaddr*)&client_address, &addr_len);
-
-    std::string buffer(18, '\0');
-    ba2str(&client_address.rc_bdaddr, buffer.data());
-    fmt::print("Connected from {}\n", buffer);
-
-    return {buffer, socket};
 }
 
-size_t read(int socket, std::string& buffer) {
-    buffer.resize(1024);
-    size_t bytes_read = recv(socket, buffer.data(), buffer.size(), 0);
-    if (bytes_read != -1) {
-        buffer.resize(bytes_read);
-    }
-    return bytes_read;
+void ChatRoom::leave(ClientWatcher* client) {
+    connected_clients--;
+    should_close = connected_clients == 0;
+    clients.remove(client);
+    delete client;
 }
 
-int main(int argc, char** argv) {
-    const bdaddr_t bdaddr_any = {{0, 0, 0, 0, 0, 0}};
-    sockaddr_rc local_address = {0};
+ClientWatcher::ClientWatcher(int socket, ChatRoom& chat_room) : socket(socket), chat(chat_room) {}
 
-    std::string buffer(1024, '\0');
+rearm ClientWatcher::fd_event(ChatRoom::loop_type&, int fd, int flags) {
+    ssize_t byte_count = recv(fd, buffer.data(), buffer.size(), 0);
 
-    fmt::print("Start Bluetooth RFCOMM server...\n");
-
-    /* allocate socket */
-    int server_sock = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
-
-    local_address.rc_family = AF_BLUETOOTH;
-    bacpy(&local_address.rc_bdaddr, &bdaddr_any);
-    local_address.rc_channel = 1;
-
-    fmt::print("binding\n");
-    if (bind(server_sock, (sockaddr*)&local_address, sizeof(local_address)) < 0) {
-        perror("failed to bind");
-        exit(1);
-    }
-
-    fmt::print("listening\n");
-    listen(server_sock, 1);
-
-    Client client = accept_client(server_sock);
-
-    /* read data from the client */
-    size_t bytes_sent;
-    while (auto msg = client.read()) {
-        std::string message = msg.value();
-        fmt::print("{} sent '{}'\n", client.getName(), message);
-        for (char& c : message) {
-            c = std::toupper(c);
+    if (byte_count == -1) {
+        return rearm::REMOVE;
+    } else {
+        std::string_view message(buffer.data(), byte_count);
+        fmt::print("Recu de {} : '{}'\n", fd, message);
+        if (message == "stop") {
+            write(message);
+            close(fd);
+            return rearm::REMOVE;
+        } else {
+            chat.send(message);
         }
-        bytes_sent = client.write(message);
-        // bytes_sent = send(client_sock, buffer.data(), buffer.size(), 0);
-        fmt::print("Sent {} bytes to client: '{}'\n", bytes_sent, message);
+        return rearm::REARM;
     }
-
-    /* close connection */
-    close(server_sock);
-    return 0;
 }
+
+ssize_t ClientWatcher::write(std::string_view message) {
+    return send(socket, message.data(), message.size(), 0);
+}
+
+// void ClientWatcher::watch_removed() noexcept {
+//     chat.leave(this);
+// }

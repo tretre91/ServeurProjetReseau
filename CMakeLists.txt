@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(
-  FBXOS
+  PROJET_RESEAU
   LANGUAGES C CXX
   VERSION 0.0.1
   DESCRIPTION ""
@@ -21,17 +21,17 @@ CPMAddPackage(
 )
 
 CPMAddPackage(
-  NAME asio
-  GITHUB_REPOSITORY "chriskohlhoff/asio"
-  GIT_TAG "asio-1-22-1"
+  NAME dasynq
+  GITHUB_REPOSITORY "davmac314/dasynq"
+  GIT_TAG "v1.2.2"
   DOWNLOAD_ONLY YES
 )
 
-if (asio_ADDED)
-  add_library(asio INTERFACE)
-  target_include_directories(asio INTERFACE "${asio_SOURCE_DIR}/asio/include")
+if (dasynq_ADDED)
+  add_library(dasynq INTERFACE)
+  target_include_directories(dasynq INTERFACE "${dasynq_SOURCE_DIR}/include")
 else()
-  message(FATAL_ERROR "ERROR: failed to add asio")
+  message(FATAL_ERROR "ERROR: failed to add dasynq")
 endif()
 
 add_subdirectory(server)

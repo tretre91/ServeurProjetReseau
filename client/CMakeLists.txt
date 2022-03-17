@@ -1,2 +1,2 @@
 add_executable(client client.cpp)
-target_link_libraries(client PUBLIC bluetooth fmt::fmt)
+target_link_libraries(client PUBLIC bluetooth fmt::fmt pthread)
