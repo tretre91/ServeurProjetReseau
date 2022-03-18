@@ -15,7 +15,7 @@ ChatRoom::ChatRoom(int socket, loop_type& event_loop) : server_socket(socket), e
         fmt::print("Nouvelle tentative de connexion ... ");
 
         sockaddr_rc client_address = {0};
-        unsigned int addr_len;
+        unsigned int addr_len = sizeof(sockaddr_rc);
 
         int client_socket = accept(sock, (sockaddr*)&client_address, &addr_len);
 
