@@ -33,13 +33,9 @@ int main(int argc, char** argv) {
 
     fmt::print("Pret!\n");
 
-    ChatRoom::loop_type event_loop;
+    Server server(server_socket);
 
-    ChatRoom chat(server_socket, event_loop);
-
-    while (!chat.should_stop()) {
-        event_loop.run();
-    }
+    while (server.run()) {}
 
     close(server_socket);
     return 0;

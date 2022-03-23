@@ -10,8 +10,10 @@
 
 using rearm = dasynq::rearm;
 
-ChatRoom::ChatRoom(int socket, loop_type& event_loop) : server_socket(socket), event_loop(event_loop) {
-    auto acceptor = loop_type::fd_watcher::add_watch(event_loop, server_socket, dasynq::IN_EVENTS, [&](loop_type& loop, int sock, int flags) {
+Server::Server(int socket) : server_socket(socket) {
+    // on ajoute une fonction lambda qui sera appelée lorsqu'une nouvelle connexion sera en attente
+    // sur le socket du serveur
+    loop_type::fd_watcher::add_watch(event_loop, server_socket, dasynq::IN_EVENTS, [&](loop_type& loop, int sock, int flags) {
         fmt::print("Nouvelle tentative de connexion ... ");
 
         sockaddr_rc client_address = {0};
@@ -26,7 +28,7 @@ ChatRoom::ChatRoom(int socket, loop_type& event_loop) : server_socket(socket), e
             ba2str(&client_address.rc_bdaddr, buffer.data());
             fmt::print("Succes (adresse : {})\n", buffer);
 
-            ClientWatcher* client = new ClientWatcher(client_socket, *this);
+            Client* client = new Client(client_socket, *this);
             connected_clients++;
             client->add_watch(loop, client_socket, flags);
             clients.push_front(client);
@@ -36,7 +38,16 @@ ChatRoom::ChatRoom(int socket, loop_type& event_loop) : server_socket(socket), e
     });
 }
 
-void ChatRoom::send(std::string_view message) {
+bool Server::run() {
+    if (should_close) {
+        return false;
+    } else {
+        event_loop.run();
+        return true;
+    }
+}
+
+void Server::send_to_all(std::string_view message) {
     for (auto it = clients.begin(); it != clients.end();) {
         if ((*it)->write(message) == -1) {
             auto current = it++;
@@ -47,16 +58,16 @@ void ChatRoom::send(std::string_view message) {
     }
 }
 
-void ChatRoom::leave(ClientWatcher* client) {
+void Server::leave(Client* client) {
     connected_clients--;
     should_close = connected_clients == 0;
     clients.remove(client);
     delete client;
 }
 
-ClientWatcher::ClientWatcher(int socket, ChatRoom& chat_room) : socket(socket), chat(chat_room) {}
+Client::Client(int socket, Server& chat_room) : socket(socket), server(chat_room) {}
 
-rearm ClientWatcher::fd_event(ChatRoom::loop_type&, int fd, int flags) {
+rearm Client::fd_event(Server::loop_type&, int fd, int flags) {
     ssize_t byte_count = recv(fd, buffer.data(), buffer.size(), 0);
 
     if (byte_count == -1) {
@@ -69,16 +80,16 @@ rearm ClientWatcher::fd_event(ChatRoom::loop_type&, int fd, int flags) {
             close(fd);
             return rearm::REMOVE;
         } else {
-            chat.send(message);
+            server.send_to_all(message);
         }
         return rearm::REARM;
     }
 }
 
-ssize_t ClientWatcher::write(std::string_view message) {
+ssize_t Client::write(std::string_view message) {
     return send(socket, message.data(), message.size(), 0);
 }
 
-// void ClientWatcher::watch_removed() noexcept {
+// void Client::watch_removed() noexcept {
 //     chat.leave(this);
 // }
