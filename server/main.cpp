@@ -6,8 +6,9 @@
 #include <sys/socket.h>
 
 int main(int argc, char** argv) {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
     const bdaddr_t bdaddr_any = {{0, 0, 0, 0, 0, 0}}; // BADDR_ANY est pas valide en c++ :(
-    fmt::print("Demmarrage du serveur ... ");
+    fmt::print("Demarrage du serveur ... ");
 
     int server_socket = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
     if (server_socket == -1) {
@@ -33,10 +34,23 @@ int main(int argc, char** argv) {
 
     fmt::print("Pret!\n");
 
-    Server server(server_socket);
+    std::string ip;
+    int port;
+    if (argc > 2) {
+        ip = argv[1];
+        port = std::atoi(argv[2]);
+    } else {
+        ip = "192.168.0.255";
+        port = 5000;
+    }
+
+    Server server(server_socket, ip, port);
 
     while (server.run()) {}
 
     close(server_socket);
+
+    google::protobuf::ShutdownProtobufLibrary();
+
     return 0;
 }

@@ -1,0 +1,22 @@
+syntax = "proto2";
+
+package msg;
+
+// Messages client-serveur
+message CSMessage {
+    required int32 clientId = 1;
+    required int32 serverId = 2;
+    required string data = 3;
+}
+
+// Messages serveur-serveur
+message SSMessage {
+    enum MessageType {
+        CHAT = 0;
+    }
+    
+    required int32 serverId = 1;
+    optional int32 clientId = 2;
+    required MessageType type = 3;
+    required string data = 4;
+}

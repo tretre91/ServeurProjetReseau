@@ -34,5 +34,6 @@ else()
   message(FATAL_ERROR "ERROR: failed to add dasynq")
 endif()
 
+add_subdirectory(message)
 add_subdirectory(server)
 add_subdirectory(client)
