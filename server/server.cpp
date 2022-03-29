@@ -11,20 +11,19 @@
 
 #include <fmt/core.h>
 #include <string>
-#include <thread>
 
 using rearm = dasynq::rearm;
 
-Server::Server(int socket, std::string_view broadcast_ip, int broadcast_port) : server_socket(socket) {
+Server::Server(int socket, std::string_view broadcast_ip, int broadcast_port) : m_server_socket(socket) {
     fmt::print("Id du serveur : {}\n", get_id());
 
     if (!init_broadcast(broadcast_ip.data(), broadcast_port)) {
         fmt::print(stderr, "Echec lors de la création des sockets de broadcast\n");
-        should_close = true;
+        m_should_close = true;
         return;
     }
 
-    server_intercomm = std::thread([&]() {
+    m_broadcast_thread = std::thread([&]() {
         int size = 0;
         constexpr size_t buffer_size = 1024;
         std::array<char, buffer_size> buffer;
@@ -58,7 +57,8 @@ Server::Server(int socket, std::string_view broadcast_ip, int broadcast_port) : 
 
     // on ajoute une fonction lambda qui sera appelée lorsqu'une nouvelle connexion sera en attente
     // sur le socket du serveur
-    loop_type::fd_watcher::add_watch(event_loop, server_socket, dasynq::IN_EVENTS, [&](loop_type& loop, int sock, int flags) {
+    loop_type::fd_watcher::add_watch(m_event_loop, m_server_socket, dasynq::IN_EVENTS, [&](loop_type& loop, int sock, int flags) {
+        static int next_id = 1;
         fmt::print("Nouvelle tentative de connexion ... ");
 
         sockaddr_rc client_address = {0};
@@ -73,19 +73,19 @@ Server::Server(int socket, std::string_view broadcast_ip, int broadcast_port) : 
             ba2str(&client_address.rc_bdaddr, address.data());
             fmt::print("Succes (adresse : {})\n", address);
 
-            auto it = client_ids.find(address);
-            uint8_t client_id;
-            if (it == client_ids.end()) {
-                client_id = ids_sequence++;
-                client_ids[address] = client_id;
+            auto it = m_client_ids.find(address);
+            int client_id;
+            if (it == m_client_ids.end()) {
+                client_id = next_id++;
+                m_client_ids[address] = client_id;
             } else {
-                client_id = client_ids[address];
+                client_id = m_client_ids[address];
             }
 
             Client* client = new Client(client_socket, client_id, *this);
-            connected_clients++;
+            m_connected_clients++;
             client->add_watch(loop, client_socket, flags);
-            clients.push_front(client);
+            m_clients.push_front(client);
         }
 
         return rearm::REARM;
@@ -93,21 +93,21 @@ Server::Server(int socket, std::string_view broadcast_ip, int broadcast_port) : 
 }
 
 bool Server::run() {
-    if (should_close) {
+    if (m_should_close) {
         close_broadcast();
-        server_intercomm.join();
+        m_broadcast_thread.join(); // TODO : bloque la terminaison du programme
         return false;
     } else {
-        event_loop.run();
+        m_event_loop.run();
         return true;
     }
 }
 
 void Server::send_to_all_clients(const msg::CSMessage& message) {
-    for (auto it = clients.begin(); it != clients.end();) {
+    for (auto it = m_clients.begin(); it != m_clients.end();) {
         if ((*it)->id() != message.clientid() && (*it)->write(message) == -1) {
             auto current = it++;
-            (*current)->deregister(event_loop);
+            (*current)->deregister(m_event_loop);
         } else {
             ++it;
         }
@@ -115,7 +115,7 @@ void Server::send_to_all_clients(const msg::CSMessage& message) {
 }
 
 void Server::send_to_all(const msg::CSMessage& message) {
-    static msg::SSMessage broadcast_message;
+    static msg::SSMessage broadcast_message; // TODO : déplacer dans les variables membres
     static std::string buffer;
     broadcast_message.set_serverid(m_id);
     broadcast_message.set_clientid(message.clientid());
@@ -130,9 +130,9 @@ void Server::send_to_all(const msg::CSMessage& message) {
 }
 
 void Server::leave(Client* client) {
-    connected_clients--;
-    should_close = connected_clients == 0;
-    clients.remove(client);
+    m_connected_clients--;
+    m_should_close = m_connected_clients == 0;
+    m_clients.remove(client);
     delete client;
 }
 

@@ -19,48 +19,47 @@ class Server
 public:
     using loop_type = dasynq::event_loop_n;
 
-    /**
-     * @brief Construit un serveur
-     *
-     * @param socket Le socket qui écoute les connexions entrantes
-     */
     Server(int socket, std::string_view broadcast_ip, int broadcast_port = 5000);
 
     int get_id() { return m_id; }
 
     /**
      * @brief Attends un ou plusieurs évenements et exécute le code associé
-     *
      * @return false si le serveur peut s'arrêter (tous les clients sont déconnectés), true sinon
      */
     bool run();
 
     /**
-     * @brief Envoie un message à tous les clients connectés
+     * @brief Envoie un message à tous les clients connectés et aux autres serveurs
      */
     void send_to_all(const msg::CSMessage& message);
 
     /**
      * @brief Fonction appelée par les clients pour quitter le serveur
-     *
      * @param client Un pointeur vers le client qui se déconnecte
      */
     void leave(Client* client);
 
 private:
-    int server_socket;
+    int m_server_socket;
     int m_id = init_id();
-    int connected_clients = 0;
-    bool should_close = false;
-    loop_type event_loop;
-    std::unordered_map<std::string, uint8_t> client_ids;
-    uint8_t ids_sequence = 1;
-    std::thread server_intercomm;
+    int m_connected_clients = 0;
+    bool m_should_close = false;
+    loop_type m_event_loop;
+    std::unordered_map<std::string, int> m_client_ids;
+    std::thread m_broadcast_thread;
 
-    std::forward_list<Client*> clients;
+    std::forward_list<Client*> m_clients;
 
+    /**
+     * @brief Envoie un message à tous les clients connectés à ce serveur
+     */
     void send_to_all_clients(const msg::CSMessage& message);
 
+    /**
+     * @brief Renvoie l'identifiant du serveur, pour l'instant l'id est la dernière composante
+     * de l'ipv4 du serveur (xxx.xxx.xxx.id)
+     */
     static int init_id();
 };
 
