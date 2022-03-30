@@ -100,6 +100,8 @@ int processBluetoothClientMessages(BluetoothClient client) {
 		}
 	}
 	
+	removeBluetoothClient(client);
+	
 	puts("info: un client s'est déconnecté");
 		
 	return 1;
