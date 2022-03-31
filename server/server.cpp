@@ -6,10 +6,16 @@
 #include "client.hpp"
 #include "server.hpp"
 
+#include <fmt/color.h>
 #include <fmt/core.h>
 #include <string>
 
 using rearm = dasynq::rearm;
+
+void print_error(std::string_view error_message) {
+    static const std::string prefix = fmt::format(fmt::emphasis::bold | fmt::fg(fmt::color::red), "ERREUR: ");
+    fmt::print("{}: {}\n", prefix, error_message);
+}
 
 Server::Server(int socket, std::string_view broadcast_ip, int broadcast_port) : m_server_socket(socket) {
     fmt::print("Id du serveur : {}\n", get_id());
@@ -18,7 +24,7 @@ Server::Server(int socket, std::string_view broadcast_ip, int broadcast_port) : 
     m_broadcast_sender = broadcastSocket(broadcast_ip.data(), broadcast_port, BROADCAST_SEND);
 
     if (m_broadcast_listener == nullptr || m_broadcast_sender == nullptr) {
-        fmt::print(stderr, "Echec lors de la création des sockets de broadcast\n");
+        print_error("Echec lors de la création des sockets de broadcast");
         m_should_close = true;
         return;
     }
@@ -78,7 +84,7 @@ void Server::send_to_all(const msg::CSMessage& message) {
     broadcast_message.set_data(message.data());
     broadcast_message.set_type(msg::SSMessage::CHAT);
     if (!broadcast_message.SerializeToString(&buffer)) {
-        fmt::print(stderr, "ERROR: serialization failed\nmessage was initalized ? {}\n", message.IsInitialized());
+        print_error("Echec de la serialisation d'un message");
     } else {
         sendBroadcastMessage(m_broadcast_sender, buffer.data(), buffer.size());
         send_to_all_clients(message);
@@ -153,7 +159,7 @@ void Server::handle_broadcast_message() {
     if (size > 0) {
         fmt::print("{} octets recus\n", size);
         if (!message.ParseFromArray(buffer.data(), size)) {
-            fmt::print(stderr, "Failed to parse a broadcast message\n");
+            print_error("Echec de la deserialisation d'un message de broadcast");
             return;
         }
 
@@ -164,10 +170,10 @@ void Server::handle_broadcast_message() {
             send_to_all_clients(client_message);
         }
     } else if (size == 0) {
-        fmt::print(stderr, "ERREUR: Déconnexion du socket de diffusion\n");
+        print_error("Deconnexion du socket de diffusion");
         return;
     } else if (size == -1) {
-        fmt::print(stderr, "ERREUR: lors de la lecture du socket de diffusion\n");
+        print_error("Echec de la lecture du socket de diffusion");
         return;
     }
 }
