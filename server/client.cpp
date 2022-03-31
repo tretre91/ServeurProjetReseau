@@ -5,7 +5,7 @@
 using dasynq::rearm;
 
 Client::Client(int socket, int id, Server& server) : m_socket(socket), m_id(id), m_server(server) {
-    m_message.set_clientid((m_server.get_id() << 16) | m_id);
+    m_message.set_clientid(m_id);
     m_message.set_serverid(m_server.get_id());
 }
 

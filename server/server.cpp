@@ -58,7 +58,7 @@ Server::Server(int socket, std::string_view broadcast_ip, int broadcast_port) : 
     // on ajoute une fonction lambda qui sera appelée lorsqu'une nouvelle connexion sera en attente
     // sur le socket du serveur
     loop_type::fd_watcher::add_watch(m_event_loop, m_server_socket, dasynq::IN_EVENTS, [&](loop_type& loop, int sock, int flags) {
-        static int next_id = 1;
+        static int next_id = m_id << 16;
         fmt::print("Nouvelle tentative de connexion ... ");
 
         sockaddr_rc client_address = {0};
@@ -79,7 +79,7 @@ Server::Server(int socket, std::string_view broadcast_ip, int broadcast_port) : 
                 client_id = next_id++;
                 m_client_ids[address] = client_id;
             } else {
-                client_id = m_client_ids[address];
+                client_id = it->second;
             }
 
             Client* client = new Client(client_socket, client_id, *this);

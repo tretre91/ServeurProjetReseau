@@ -24,7 +24,7 @@ public:
     int get_id() { return m_id; }
 
     /**
-     * @brief Attends un ou plusieurs évenements et exécute le code associé
+     * @brief Attends un ou plusieurs événements et exécute le code associé
      * @return false si le serveur peut s'arrêter (tous les clients sont déconnectés), true sinon
      */
     bool run();
