@@ -5,14 +5,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
-
-struct BroadcastSocket {
-	int socket;
-	struct sockaddr_in sendAddr;
-	struct sockaddr_in receiveAddr;
-};
 
 static void initAddr(struct sockaddr_in* addrIn, in_addr_t addr, int port) {
 	memset(addrIn, 0, sizeof(struct sockaddr_in));
@@ -28,7 +21,7 @@ static int enableSocketOption(int socket, int option) {
 
 BroadcastSocket broadcastSocket(const char* ip, int port, int option) {
 	
-	BroadcastSocket s = malloc(sizeof(struct BroadcastSocket));
+	BroadcastSocket s = malloc(sizeof(struct _BroadcastSocket));
 	if (s == NULL) {
 		return NULL;
 	}

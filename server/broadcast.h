@@ -1,7 +1,15 @@
 #ifndef _BROADCAST_H_
 #define _BROADCAST_H_
 
-typedef struct BroadcastSocket* BroadcastSocket;
+#include <netinet/in.h>
+
+typedef struct _BroadcastSocket* BroadcastSocket;
+
+struct _BroadcastSocket {
+	int socket;
+	struct sockaddr_in sendAddr;
+	struct sockaddr_in receiveAddr;
+};
 
 enum BroadcastSocketOption {
 	BROADCAST_SEND = 1,

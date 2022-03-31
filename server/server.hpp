@@ -4,10 +4,14 @@
 #include <array>
 #include <dasynq.h>
 #include <forward_list>
+#include <message.pb.h>
 #include <string_view>
 #include <thread>
 #include <unordered_map>
-#include <message.pb.h>
+
+extern "C" {
+#include "broadcast.h"
+}
 
 class Client;
 
@@ -21,7 +25,13 @@ public:
 
     Server(int socket, std::string_view broadcast_ip, int broadcast_port = 5000);
 
-    int get_id() { return m_id; }
+    ~Server() {
+        close_broadcast();
+    }
+
+    int get_id() {
+        return m_id;
+    }
 
     /**
      * @brief Attends un ou plusieurs événements et exécute le code associé
@@ -43,18 +53,26 @@ public:
 private:
     int m_server_socket;
     int m_id = init_id();
-    int m_connected_clients = 0;
+    int m_nb_clients = 0;
     bool m_should_close = false;
     loop_type m_event_loop;
     std::unordered_map<std::string, int> m_client_ids;
-    std::thread m_broadcast_thread;
+    
+    BroadcastSocket m_broadcast_sender = nullptr;
+    BroadcastSocket m_broadcast_listener = nullptr;
 
     std::forward_list<Client*> m_clients;
+
+    void accept_client(loop_type&, int, int);
 
     /**
      * @brief Envoie un message à tous les clients connectés à ce serveur
      */
     void send_to_all_clients(const msg::CSMessage& message);
+
+    void handle_broadcast_message();
+
+    void close_broadcast();
 
     /**
      * @brief Renvoie l'identifiant du serveur, pour l'instant l'id est la dernière composante

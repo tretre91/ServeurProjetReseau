@@ -34,9 +34,15 @@ Le serveur gère plusieurs connections à la fois, il affiche dans la console le
 
 **Remarque :** pour que le pi puisse accepter des connexions il doit être visible en bluetooth (`bluetoothctl discoverable on`).
 
+Commandes disponibles :
+- `stop` : arrête le serveur
+- `stat` : affiche des statistiques sur le serveur
+
+## Libs
+
 Les libs utilisées sont :
-- [fmtlib](https://fmt.dev) : pour l'affichage, en remplacement de printf et cout (pas *absolument* nécessaire, je l'ai incluse par habitude mais on peut la virer si vous voulez)
-- [dasynq](https://github.com/davmac314/dasynq) : pour la boucle d'évenement, ça permet d'avoir des fonctions appelés de manière asynchrone lorsqu'on recoit un message sur un socket, ce qui permet de gérer plusieurs connexions à la fois ainsi qu'accepter de nouveaux utilisateurs sur un seul thread
+- [fmtlib](https://fmt.dev) : pour l'affichage, en remplacement de printf et cout
+- [dasynq](https://github.com/davmac314/dasynq) : pour la boucle d'événement, ça permet d'avoir des fonctions appelés de manière asynchrone lorsqu'on reçoit un message sur un socket, ce qui permet de gérer plusieurs connexions à la fois ainsi qu'accepter de nouveaux utilisateurs sur un seul thread
 - [protobuf](https://developers.google.com/protocol-buffers/) : pour l'encodage de messages plus complexes que des chaînes de caractères, permet d'encoder / décoder depuis des langages différents
 
 La partie socket et broadcast est basée sur le code de Colin.
