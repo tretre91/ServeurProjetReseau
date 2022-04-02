@@ -24,7 +24,7 @@ $ make server
 
 ## Utilisation
 
-Le serveur gère plusieurs connections à la fois, il affiche dans la console les messages reçus et les renvoie à tous les clients connectés.
+Le serveur gère plusieurs connections à la fois, il affiche dans la console les messages reçus et les renvoie à tous les clients connectés. Il expose également un service sdp dont l'UUID est `98592148-f911-4837-9132-ef39f920a5b9`
 
 **Remarque :** pour que le pi puisse accepter des connexions il doit être visible en bluetooth (`bluetoothctl discoverable on`).
 

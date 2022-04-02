@@ -36,5 +36,5 @@ endif()
 
 add_subdirectory(message)
 
-add_executable(server src/broadcast.c src/server.cpp src/client.cpp src/main.cpp)
+add_executable(server src/broadcast.c src/bluetooth.c src/server.cpp src/client.cpp src/main.cpp)
 target_link_libraries(server PUBLIC bluetooth dasynq fmt::fmt proto)
