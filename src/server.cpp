@@ -40,6 +40,11 @@ Server::Server(int socket, std::string_view broadcast_ip, int broadcast_port) : 
         static std::string input;
         std::getline(std::cin, input);
         if (input == "stop") {
+            msg::CSMessage stop_message;
+            stop_message.set_clientid(0);
+            stop_message.set_serverid(m_id);
+            stop_message.set_data("stop");
+            send_to_all_clients(stop_message);
             m_should_close = true;
             return rearm::REMOVE;
         } else if (input == "stat") {
