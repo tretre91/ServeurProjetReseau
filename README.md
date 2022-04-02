@@ -24,7 +24,7 @@ $ make server
 
 ## Utilisation
 
-Le serveur gère plusieurs connections à la fois, il affiche dans la console les messages reçus et les renvoie à tous les clients connectés. Il expose également un service sdp dont l'UUID est `98592148-f911-4837-9132-ef39f920a5b9`
+Le serveur gère plusieurs connections à la fois, il affiche dans la console les messages reçus et les renvoie à tous les clients connectés.
 
 **Remarque :** pour que le pi puisse accepter des connexions il doit être visible en bluetooth (`bluetoothctl discoverable on`).
 
@@ -33,6 +33,24 @@ pour le lancer, simplement faire `./server`.
 Commandes disponibles :
 - `stop` : arrête le serveur, il envoie un message "stop" à tous ses clients avant de s'arrêter
 - `stat` : affiche des statistiques sur le serveur
+
+### SDP
+
+Le serveur expose également un service sdp dont l'UUID est `98592148-f911-4837-9132-ef39f920a5b9`.
+
+Pour faire fonctionner le sdp (résumé de https://raspberrypi.stackexchange.com/a/42262) :
+- ajouter ` --compat` à la ligne `ExecStart=/usr/lib/bluetooth/bluetoothd` du fichier `/etc/systemd/system/dbus-org.bluez.service`
+- redémarrer le service bluetooth
+  ```bash
+  sudo systemctl daemon-reload
+  sudo systemctl restart bluetooth
+  ```
+
+Ensuite on peut lancer le serveur en root (`sudo ./server`), ou bien changer les permissions du ficher `/var/run/sdp` avec
+```bash
+sudo chmod 666 /var/run/sdp
+```
+pour pouvoir le lancer normalement. 
 
 ## Libs
 
