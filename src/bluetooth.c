@@ -37,7 +37,7 @@ int create_socket(void) {
 
 int init_service(void) {
     // uuid : 98592148-f911-4837-9132-ef39f920a5b9
-    uint32_t svc_uuid_int[] = {0x98592148, 0xF9114837, 0x9132EF39, 0xF920A5B9};
+    uint8_t svc_uuid_int[16] = {0x98, 0x59, 0x21, 0x48, 0xF9, 0x11, 0x48, 0x37, 0x91, 0x32, 0xEF, 0x39, 0xF9, 0x20, 0xA5, 0xB9};
     uint8_t rfcomm_channel = 1;
     const char* service_name = "ServeurProjetReseau";
     const char* service_dsc = "Un serveur pour le projet de reseau";
