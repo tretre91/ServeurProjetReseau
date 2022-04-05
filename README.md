@@ -60,7 +60,3 @@ Les bibliothèques utilisées sont :
 - [protobuf](https://developers.google.com/protocol-buffers/) : pour l'encodage de messages plus complexes que des chaînes de caractères, permet d'encoder / décoder depuis des langages différents
 
 La partie socket et broadcast est basée sur le code de Colin.
-
-## Tâches à réaliser
-
-voir https://hackmd.io/@pOKjsj05QGK4BisC1CfjbQ/ByJgKU0Z9
