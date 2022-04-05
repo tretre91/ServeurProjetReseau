@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+// objet représentant la session en cours avec le serveur SDP
 sdp_session_t* session = NULL;
 
 int create_socket(void) {
@@ -82,7 +83,7 @@ int init_service(void) {
     sdp_list_t* access_proto_list = sdp_list_append(0, proto_list);
     sdp_set_access_protos(&record, access_proto_list);
 
-    // nom du service, autheur et description
+    // nom du service, auteur et description
     sdp_set_info_attr(&record, service_name, service_prov, service_dsc);
 
     // connexion au serveur sdp

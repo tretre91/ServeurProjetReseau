@@ -16,6 +16,9 @@ enum BroadcastSocketOption {
 	BROADCAST_RECEIVE = 2
 };
 
+/**
+ * @brief Crée un socket utilisé pour communiquer sur une adresse de diffusion
+ */
 BroadcastSocket broadcastSocket(const char* ip, int port, int option);
 
 int sendBroadcastMessage(BroadcastSocket s, const char* message, int size);

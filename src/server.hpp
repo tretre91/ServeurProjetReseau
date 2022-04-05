@@ -23,6 +23,13 @@ class Server
 public:
     using loop_type = dasynq::event_loop_n;
 
+    /**
+     * @brief Crée un serveur à partir d'un socket acceptant et d'une ip de broadcast
+     *
+     * @param socket Un socket qui attends les nouvelles connexions (créé avec create_socket)
+     * @param broadcast_ip L'adresse de diffusion du réseau
+     * @param broadcast_port Le port à utiliser
+     */
     Server(int socket, std::string_view broadcast_ip, int broadcast_port = 5000);
 
     ~Server() {
@@ -57,12 +64,15 @@ private:
     bool m_should_close = false;
     loop_type m_event_loop;
     std::unordered_map<std::string, int> m_client_ids;
-    
+
     BroadcastSocket m_broadcast_sender = nullptr;
     BroadcastSocket m_broadcast_listener = nullptr;
 
     std::forward_list<Client*> m_clients;
 
+    /**
+     * @brief Fonction appelée lorsqu'un nouveau client essaie de se connecter
+     */
     void accept_client(loop_type&, int, int);
 
     /**
@@ -70,8 +80,14 @@ private:
      */
     void send_to_all_clients(const msg::CSMessage& message);
 
+    /**
+     * @brief Gère les messages reçus d'autres serveurs
+     */
     void handle_broadcast_message();
 
+    /**
+     * @brief Ferme le socket utilisé pour le broadcast
+     */
     void close_broadcast();
 
     /**

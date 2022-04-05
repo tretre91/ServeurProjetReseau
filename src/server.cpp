@@ -12,6 +12,9 @@
 
 using rearm = dasynq::rearm;
 
+/**
+ * @brief Affiche un message d'erreur dans le terminal
+ */
 void print_error(std::string_view error_message) {
     static const std::string prefix = fmt::format(fmt::emphasis::bold | fmt::fg(fmt::color::red), "ERREUR: ");
     fmt::print("{}: {}\n", prefix, error_message);
@@ -29,13 +32,19 @@ Server::Server(int socket, std::string_view broadcast_ip, int broadcast_port) : 
         return;
     }
 
-    // gere les messages de broadcast
+    /**
+     * @brief Gère les messages de broadcast
+     * La fonction est appelée à chaque fois que des données sont disponibles sur le socket de broadcast
+     */
     loop_type::fd_watcher::add_watch(m_event_loop, m_broadcast_listener->socket, dasynq::IN_EVENTS, [&](loop_type&, int, int) {
         handle_broadcast_message();
         return rearm::REARM;
     });
 
-    // gere les inputs sur l'entree standard
+    /**
+     * @brief  Gère les inputs sur l'entrée standard
+     * La fonction est appelée à chaque fois qu'une ligne de texte est entrée dans le terminal
+     */
     loop_type::fd_watcher::add_watch(m_event_loop, fileno(stdin), dasynq::IN_EVENTS, [&](loop_type&, int, int) {
         static std::string input;
         std::getline(std::cin, input);
@@ -53,7 +62,10 @@ Server::Server(int socket, std::string_view broadcast_ip, int broadcast_port) : 
         return rearm::REARM;
     });
 
-    // gere les nouvelles connexions
+    /**
+     * @brief Gère les nouveaux clients
+     * La fonction est appelée à chaque fois qu'un appareil veut se connecter'
+     */
     loop_type::fd_watcher::add_watch(m_event_loop, m_server_socket, dasynq::IN_EVENTS, [&](loop_type& loop, int sock, int flags) {
         accept_client(loop, sock, flags);
         return rearm::REARM;
@@ -82,7 +94,7 @@ void Server::send_to_all_clients(const msg::CSMessage& message) {
 }
 
 void Server::send_to_all(const msg::CSMessage& message) {
-    static msg::SSMessage broadcast_message; // TODO : déplacer dans les variables membres
+    static msg::SSMessage broadcast_message;
     static std::string buffer;
     broadcast_message.set_serverid(m_id);
     broadcast_message.set_clientid(message.clientid());

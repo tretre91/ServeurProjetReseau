@@ -18,7 +18,6 @@ rearm Client::fd_event(Server::loop_type&, int fd, int flags) {
         m_message.set_data(m_buffer.data(), byte_count);
         fmt::print("Recu de {}:{} : '{}'\n", m_message.serverid(), m_message.clientid(), m_message.data());
 
-        // TODO: gestion des messages stop
         std::string_view message(m_message.data());
         auto sep = message.find_first_of(' ');
         if ((sep != std::string_view::npos && message.substr(sep + 1) == "stop") || message == "stop") {

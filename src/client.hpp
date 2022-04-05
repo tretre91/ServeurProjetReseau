@@ -10,6 +10,13 @@
 class Client : public Server::loop_type::fd_watcher_impl<Client>
 {
 public:
+    /**
+     * @brief Crée un "gestionnaire" de connexion avec un client
+     *
+     * @param socket le socket à utiliser
+     * @param id l'identifiant du client
+     * @param server Une référence vers le serveur
+     */
     Client(int socket, int id, Server& server);
 
     int id() {
@@ -25,7 +32,7 @@ public:
 
     /**
      * @brief Envoie des données vers le client
-     * @return ssize_t La valeur de retour de send (i.e. le nombre d'octets envoyés ou -1 en cas d'erreur)
+     * @return La valeur de retour de send (i.e. le nombre d'octets envoyés ou -1 en cas d'erreur)
      */
     ssize_t write(const msg::CSMessage& message);
 
